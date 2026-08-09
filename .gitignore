@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pyo
+debug/
+.pytest_cache/
+.ruff_cache/
+.claude/
