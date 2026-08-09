@@ -11,9 +11,9 @@ param(
 $ErrorActionPreference = "Stop"
 $repo = Split-Path $PSScriptRoot -Parent
 
-Write-Host "== Ruff + pytest (python:3.13 container) ==" -ForegroundColor Cyan
-docker run --rm -v "${repo}:/app" -w /app -v samduo-pip-cache:/root/.cache/pip python:3.13 sh -c @"
-pip install -q ruff -r requirements_test.txt 2>&1 | tail -1
+Write-Host "== Ruff + pytest (python:3.14 container) ==" -ForegroundColor Cyan
+docker run --rm -v "${repo}:/app" -w /app -v samduo-pip-cache:/root/.cache/pip python:3.14 sh -c @"
+pip install -q -r requirements_test.txt 2>&1 | tail -1
 ruff check custom_components/samduo_battery tests || exit 1
 ruff format --check custom_components/samduo_battery tests || exit 1
 pytest tests/ -q --tb=short
