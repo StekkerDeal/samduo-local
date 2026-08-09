@@ -1,0 +1,15 @@
+{
+  "domain": "samduo_battery",
+  "name": "SAMDUO Local TCP Control",
+  "codeowners": ["@StekkerDeal"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/StekkerDeal/samduo-local",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/StekkerDeal/samduo-local/issues",
+  "quality_scale": "bronze",
+  "requirements": [],
+  "version": "0.0.1",
+  "zeroconf": ["_samduo._tcp.local."]
+}

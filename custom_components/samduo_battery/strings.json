@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SAMDUO Local TCP Control",
+        "description": "Connect to a SAMDUO battery over your local network. The serial number is read from the device automatically. Make sure the 'HEMS Managed' toggle in the SAMDUO app is switched OFF, and note the device answers only one TCP client at a time.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the battery (e.g. 192.168.1.95)",
+          "port": "TCP port of the local API (default 3335)",
+          "name": "Display name for this battery in Home Assistant"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Discovered SAMDUO battery",
+        "description": "Add the {model} at {host} (serial {serial})? Make sure the 'HEMS Managed' toggle in the SAMDUO app is switched OFF before using any control features.",
+        "data": {
+          "name": "Name"
+        },
+        "data_description": {
+          "name": "Display name for this battery in Home Assistant"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the device. Check the host and port, and make sure nothing else (e.g. the SAMDUO app) is holding the device's only TCP connection."
+    },
+    "abort": {
+      "already_configured": "This battery is already configured",
+      "not_supported": "This SAMDUO device is not a supported battery"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "SAMDUO Battery options",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name",
+          "poll_interval": "Poll interval (seconds)"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the battery",
+          "port": "TCP port of the local API (default 3335)",
+          "name": "Display name for this battery in Home Assistant",
+          "poll_interval": "How often to poll the battery for new data (default 5)"
+        }
+      }
+    }
+  }
+}
