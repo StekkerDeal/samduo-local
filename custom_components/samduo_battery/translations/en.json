@@ -53,8 +53,8 @@
           "port": "TCP port of the local API (default 3335)",
           "name": "Display name for this battery in Home Assistant",
           "poll_interval": "How often to poll the battery for new data (default 5)",
-          "max_charge_power": "Upper bound for charge commands (default 800, the grid-compliant output)",
-          "max_discharge_power": "Upper bound for discharge commands (default 800)",
+          "max_charge_power": "Upper bound for charge commands (default 800, the grid-compliant output; max 2600, the inverter rating - keep it at or below the limit set in the SAMDUO app)",
+          "max_discharge_power": "Upper bound for discharge commands (default 800; max 2600 - keep it at or below the limit set in the SAMDUO app)",
           "keepalive_interval": "How often an active setpoint is re-sent to the battery (default 30)",
           "control_timeout": "How long the battery holds a setpoint without a refresh before resuming self-management (default 90; must exceed the keepalive interval)"
         }

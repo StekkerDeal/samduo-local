@@ -105,9 +105,26 @@ configurable in the integration options.
 within seconds and then returns to self-management. Until you press it (or restart HA),
 an active setpoint - including 0 - is held indefinitely.
 
-Setpoints are clamped to the per-direction limits in the options (default 800 W each,
-the grid-compliant output; the E6000 inverter itself is rated 2600 W). The device
-accepts any value without validation, so keep the limits honest for your setup.
+### Power limits
+
+Setpoints are clamped to the per-direction limits in the integration options
+(**Settings → Devices & Services → SAMDUO → Configure**). The defaults are **800 W in
+both directions**: the grid-compliant output level. They can be raised to at most
+2600 W, the E6000 inverter rating.
+
+Measured behaviour on a Nex E6000 (fw 0.0.0.236): delivered power tracks the
+commanded setpoint within about 0.5 % up to the charge/discharge limits configured in
+the **SAMDUO app**, and the firmware silently clamps at those app limits above them -
+a command's echo and the stored control config will still show the higher number
+while the inverter delivers only the app limit. The protocol itself accepts values
+up to ±5000 W without error, so the integration limits and the app limits are the
+layers that actually decide what flows. Keep the integration limits at or below the
+app limits so what you command is what you get.
+
+**Raising the limits above 800 W is entirely at your own risk.** Check the grid-feed
+regulations that apply at your location, the wiring and fusing of the circuit the
+battery is on, and your model's inverter rating. Only the Nex E6000 has been
+measured; other models are unverified.
 
 ### Driving it from EMHASS
 

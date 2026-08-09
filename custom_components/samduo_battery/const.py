@@ -62,7 +62,13 @@ CONF_MAX_DISCHARGE_POWER = "max_discharge_power"
 # users raise it in options. The E6000 inverter itself is rated 2600 W.
 DEFAULT_MAX_POWER = 800
 POWER_LIMIT_MIN = 100
-POWER_LIMIT_MAX = 5000
+# Ceiling recon 2026-08-09: delivery tracks commands within ~0.5 % up to the
+# app-configured limit (2600/2600 on the test unit) and the firmware clamps
+# silently above it, both directions. 2600 is the E6000 inverter rating - the
+# most that can ever be delivered on this model. The protocol field allows
+# +-5000 but that is a family-wide envelope, not a rating; other models are
+# unverified.
+POWER_LIMIT_MAX = 2600
 
 # Spec §4.4 ranges for 22045. Control recon 2026-08-09: the device accepts
 # values beyond ±5000 with code 200 and stores them - there is NO device-side
