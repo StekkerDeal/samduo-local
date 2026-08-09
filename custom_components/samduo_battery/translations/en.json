@@ -37,20 +37,36 @@
   "options": {
     "step": {
       "init": {
-        "title": "SAMDUO Battery options",
+        "title": "SAMDUO battery options",
         "data": {
           "host": "Host",
           "port": "Port",
           "name": "Name",
-          "poll_interval": "Poll interval (seconds)"
+          "poll_interval": "Poll interval (seconds)",
+          "max_charge_power": "Max charge power (W)",
+          "max_discharge_power": "Max discharge power (W)",
+          "keepalive_interval": "Setpoint keepalive interval (seconds)",
+          "control_timeout": "Control watchdog timeout (seconds)"
         },
         "data_description": {
           "host": "IP address or hostname of the battery",
           "port": "TCP port of the local API (default 3335)",
           "name": "Display name for this battery in Home Assistant",
-          "poll_interval": "How often to poll the battery for new data (default 5)"
+          "poll_interval": "How often to poll the battery for new data (default 5)",
+          "max_charge_power": "Upper bound for charge commands (default 800, the grid-compliant output)",
+          "max_discharge_power": "Upper bound for discharge commands (default 800)",
+          "keepalive_interval": "How often an active setpoint is re-sent to the battery (default 30)",
+          "control_timeout": "How long the battery holds a setpoint without a refresh before resuming self-management (default 90; must exceed the keepalive interval)"
         }
       }
+    }
+  },
+  "exceptions": {
+    "set_failed": {
+      "message": "The command for {entity} did not reach the battery. Check the connection (is the SAMDUO app holding the device's only TCP slot?) and try again."
+    },
+    "set_rejected": {
+      "message": "{entity} cannot be set to that value: {reason}"
     }
   }
 }

@@ -53,6 +53,15 @@ def auto_enable_custom_integrations(enable_custom_integrations):
     yield
 
 
+@pytest.fixture(autouse=True)
+def fast_writes(monkeypatch):
+    """Zero the write-path delays so control tests do not sleep."""
+    from custom_components.samduo_battery.coordinator import SamduoBatteryCoordinator
+
+    monkeypatch.setattr(SamduoBatteryCoordinator, "_WRITE_VERIFY_DELAY_SECONDS", 0)
+    monkeypatch.setattr(SamduoBatteryCoordinator, "_WRITE_RETRY_DELAY_SECONDS", 0)
+
+
 @pytest.fixture
 def mock_client():
     """Mock SamduoTcpClient in both the setup path and the config flow."""
@@ -68,5 +77,8 @@ def mock_client():
         client.get_power_config = AsyncMock(return_value=dict(MOCK_POWER_CONFIG))
         client.get_backup_state = AsyncMock(return_value={"backup_enabled": 0})
         client.request = AsyncMock(return_value={"inv_backup": 0})
+        # 22045 echoes the NEW values; 22013 echoes the PREVIOUS value.
+        client.set_power_control = AsyncMock(side_effect=lambda p, t: {"power": p, "timeoutS": t})
+        client.set_backup = AsyncMock(return_value={"inv_backup": 0})
         with patch("custom_components.samduo_battery.config_flow.SamduoTcpClient", new=mock_cls):
             yield client

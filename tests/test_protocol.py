@@ -1,7 +1,7 @@
 """Tests for the pure protocol module: envelopes, framing, parsing, scaling.
 
 The response fixtures are captures from a Nex E6000 (fw 0.0.0.236, recon
-2026-08-09) with the serial number anonymized — otherwise byte-identical,
+2026-08-09) with the serial number anonymized - otherwise byte-identical,
 including the firmware's real ``"timeLeft "`` trailing-space key and the
 -32700 batch rejection.
 """
@@ -9,6 +9,8 @@ including the firmware's real ``"timeLeft "`` trailing-space key and the
 from __future__ import annotations
 
 import json
+
+import pytest
 
 from custom_components.samduo_battery import protocol
 
@@ -208,3 +210,31 @@ def test_scale_power_config_uses_stripped_key() -> None:
 
 def test_scale_backup_state() -> None:
     assert protocol.scale_backup_state({"inv_backup": 1}) == {"backup_enabled": 1}
+
+
+# ── control builders ───────────────────────────────────────────────────────────
+
+
+def test_build_power_control_params() -> None:
+    assert protocol.build_power_control_params(300, 60) == {"power": 300, "timeoutS": 60}
+    assert protocol.build_power_control_params(-5000, 3600) == {"power": -5000, "timeoutS": 3600}
+    # 0 is a real held setpoint (recon Q5), not "absent".
+    assert protocol.build_power_control_params(0, 1) == {"power": 0, "timeoutS": 1}
+
+
+def test_build_power_control_rejects_out_of_range() -> None:
+    # The device accepts anything (recon: ±6000 stored with code 200), so the
+    # builder is the only guard.
+    with pytest.raises(ValueError, match="power 5001"):
+        protocol.build_power_control_params(5001, 60)
+    with pytest.raises(ValueError, match="power -6000"):
+        protocol.build_power_control_params(-6000, 60)
+    with pytest.raises(ValueError, match="timeoutS 0"):
+        protocol.build_power_control_params(100, 0)
+    with pytest.raises(ValueError, match="timeoutS 3601"):
+        protocol.build_power_control_params(100, 3601)
+
+
+def test_build_backup_params() -> None:
+    assert protocol.build_backup_params(True) == {"inv_backup": 1}
+    assert protocol.build_backup_params(False) == {"inv_backup": 0}

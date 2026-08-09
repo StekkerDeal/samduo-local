@@ -82,7 +82,7 @@ def build_request(
     despite the spec advertising multi-service messages.
 
     ``ack`` defaults to 1 because the device sends NO response at all with
-    ``ack:0`` (live test 2026-08-09) — the spec's "may be omitted where not
+    ``ack:0`` (live test 2026-08-09) - the spec's "may be omitted where not
     necessary" reads as optional, but over TCP every request needs its reply.
     """
     if ts is None:
@@ -272,3 +272,32 @@ def scale_power_config(result: dict[str, Any]) -> dict[str, Any]:
 def scale_backup_state(result: dict[str, Any]) -> dict[str, Any]:
     """Scale a 22023 result (backup enablement)."""
     return _scale(result, _BACKUP_FIELDS)
+
+
+# ── Control payload builders ─────────────────────────────────────────────────
+
+_CONTROL_POWER_MAX = 5000
+_CONTROL_TIMEOUT_MIN = 1
+_CONTROL_TIMEOUT_MAX = 3600
+
+
+def build_power_control_params(power: int, timeout_s: int) -> dict[str, int]:
+    """Params for 22045. Validation lives here because the device has none:
+    control recon 2026-08-09 showed ±6000 W accepted with code 200 despite the
+    spec's ±5000 range. A ValueError raised here is the only thing standing
+    between a bad automation value and the inverter.
+    """
+    power = int(power)
+    timeout_s = int(timeout_s)
+    if not -_CONTROL_POWER_MAX <= power <= _CONTROL_POWER_MAX:
+        raise ValueError(f"power {power} W is outside the protocol range ±{_CONTROL_POWER_MAX} W")
+    if not _CONTROL_TIMEOUT_MIN <= timeout_s <= _CONTROL_TIMEOUT_MAX:
+        raise ValueError(
+            f"timeoutS {timeout_s} is outside the protocol range {_CONTROL_TIMEOUT_MIN}-{_CONTROL_TIMEOUT_MAX} s"
+        )
+    return {"power": power, "timeoutS": timeout_s}
+
+
+def build_backup_params(enabled: bool) -> dict[str, int]:
+    """Params for 22013 (enable/disable backup output)."""
+    return {"inv_backup": 1 if enabled else 0}

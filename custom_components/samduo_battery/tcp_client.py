@@ -25,7 +25,9 @@ from .const import (
     RESPONSE_TIMEOUT,
     SERVICE_CHECK_BACKUP,
     SERVICE_DEVICE_DATA,
+    SERVICE_ENABLE_BACKUP,
     SERVICE_GET_POWER_CONFIG,
+    SERVICE_SET_POWER,
 )
 from .tcp_manager import TCPClientManager
 
@@ -88,6 +90,18 @@ class SamduoTcpClient:
         result = await self.request(SERVICE_CHECK_BACKUP)
         return protocol.scale_backup_state(result) if result is not None else None
 
+    async def set_power_control(self, power: int, timeout_s: int) -> dict[str, Any] | None:
+        """Write 22045; the result echoes the NEW power/timeoutS on success."""
+        params = protocol.build_power_control_params(power, timeout_s)
+        return await self.request(SERVICE_SET_POWER, params)
+
+    async def set_backup(self, enabled: bool) -> dict[str, Any] | None:
+        """Write 22013. The result echoes the PREVIOUS inv_backup value
+        (fw 0.0.0.236, control recon 2026-08-09) - callers must confirm via a
+        22023/22600 readback, never via this echo.
+        """
+        return await self.request(SERVICE_ENABLE_BACKUP, protocol.build_backup_params(enabled))
+
     async def request(
         self,
         service_id: str,
@@ -97,7 +111,7 @@ class SamduoTcpClient:
     ) -> dict[str, Any] | None:
         """Send one service request and return its raw result dict, or None.
 
-        One service per message — firmware 0.0.0.236 rejects batches with
+        One service per message - firmware 0.0.0.236 rejects batches with
         error -32700, so callers poll sequentially.
         """
         req = protocol.build_request(self._serial, service_id, params, ack=ack)

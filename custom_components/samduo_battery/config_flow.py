@@ -11,9 +11,16 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
+    CONF_CONTROL_TIMEOUT,
+    CONF_KEEPALIVE_INTERVAL,
+    CONF_MAX_CHARGE_POWER,
+    CONF_MAX_DISCHARGE_POWER,
     CONF_MODEL,
     CONF_POLL_INTERVAL,
     CONF_SERIAL,
+    DEFAULT_CONTROL_TIMEOUT,
+    DEFAULT_KEEPALIVE_INTERVAL,
+    DEFAULT_MAX_POWER,
     DEFAULT_NAME,
     DEFAULT_POLL_INTERVAL,
     DEFAULT_PORT,
@@ -21,6 +28,8 @@ from .const import (
     MIN_POLL_INTERVAL,
     PN_IGNORED_PREFIXES,
     PN_MODEL_NAMES,
+    POWER_LIMIT_MAX,
+    POWER_LIMIT_MIN,
     SERVICE_CHECK_BACKUP,
 )
 from .tcp_client import SamduoTcpClient
@@ -47,7 +56,7 @@ async def _probe_device(host: str, port: int) -> str | None:
     """Connect, send one 22023, and return the SN from the response header.
 
     The device does not validate the SN we send, and it stamps its real SN on
-    every response — so a probe with the placeholder SN is enough to both
+    every response - so a probe with the placeholder SN is enough to both
     validate the connection and learn the serial. The manager singleton is
     removed afterwards so a failed flow leaves no state behind.
     """
@@ -83,7 +92,7 @@ class SamduoBatteryConfigFlow(ConfigFlow, domain=DOMAIN):
         serial = properties.get("sn", "")
 
         # The SAMDUO P1 Meter advertises the same service type but speaks a
-        # different command set — never offer it as a battery.
+        # different command set - never offer it as a battery.
         if pn.lower().startswith(PN_IGNORED_PREFIXES) or not serial:
             return self.async_abort(reason="not_supported")
 
@@ -168,10 +177,16 @@ class SamduoBatteryOptionsFlow(OptionsFlow):
             new_options = {
                 **self._entry.options,
                 CONF_POLL_INTERVAL: user_input[CONF_POLL_INTERVAL],
+                CONF_MAX_CHARGE_POWER: user_input[CONF_MAX_CHARGE_POWER],
+                CONF_MAX_DISCHARGE_POWER: user_input[CONF_MAX_DISCHARGE_POWER],
+                CONF_KEEPALIVE_INTERVAL: user_input[CONF_KEEPALIVE_INTERVAL],
+                CONF_CONTROL_TIMEOUT: user_input[CONF_CONTROL_TIMEOUT],
             }
             return self.async_create_entry(title="", data=new_options)
 
         current = self._entry.data
+        options = self._entry.options
+        power_field = vol.All(vol.Coerce(int), vol.Range(min=POWER_LIMIT_MIN, max=POWER_LIMIT_MAX))
         schema = vol.Schema(
             {
                 vol.Required(CONF_HOST, default=current.get(CONF_HOST, "")): str,
@@ -179,8 +194,24 @@ class SamduoBatteryOptionsFlow(OptionsFlow):
                 vol.Required(CONF_NAME, default=current.get(CONF_NAME, DEFAULT_NAME)): str,
                 vol.Required(
                     CONF_POLL_INTERVAL,
-                    default=self._entry.options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL),
+                    default=options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL),
                 ): vol.All(vol.Coerce(int), vol.Range(min=MIN_POLL_INTERVAL, max=300)),
+                vol.Required(
+                    CONF_MAX_CHARGE_POWER,
+                    default=options.get(CONF_MAX_CHARGE_POWER, DEFAULT_MAX_POWER),
+                ): power_field,
+                vol.Required(
+                    CONF_MAX_DISCHARGE_POWER,
+                    default=options.get(CONF_MAX_DISCHARGE_POWER, DEFAULT_MAX_POWER),
+                ): power_field,
+                vol.Required(
+                    CONF_KEEPALIVE_INTERVAL,
+                    default=options.get(CONF_KEEPALIVE_INTERVAL, DEFAULT_KEEPALIVE_INTERVAL),
+                ): vol.All(vol.Coerce(int), vol.Range(min=10, max=300)),
+                vol.Required(
+                    CONF_CONTROL_TIMEOUT,
+                    default=options.get(CONF_CONTROL_TIMEOUT, DEFAULT_CONTROL_TIMEOUT),
+                ): vol.All(vol.Coerce(int), vol.Range(min=30, max=3600)),
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)

@@ -24,7 +24,7 @@ RECONNECT_MAX_COOLDOWN = 60.0
 # recycled as half-open.
 READ_TIMEOUT_SUSPECT_THRESHOLD = 3
 
-# The five services in SAMDUO Open API Protocol V1.0 — the complete surface.
+# The five services in SAMDUO Open API Protocol V1.0 - the complete surface.
 SERVICE_DEVICE_DATA = "22600"
 SERVICE_ENABLE_BACKUP = "22013"
 SERVICE_CHECK_BACKUP = "22023"
@@ -35,7 +35,7 @@ ZEROCONF_TYPE = "_samduo._tcp.local."
 
 # mDNS TXT "pn" is "<modelprefix>-<mac>". The P1 Meter advertises the same
 # service type as the batteries (seen on the LAN 2026-08-09) but speaks a
-# different, undocumented command set — never offer it as a battery.
+# different, undocumented command set - never offer it as a battery.
 PN_MODEL_NAMES = {
     "samduonexe6000": "Nex E6000",
     "samduonexe6000h": "Nex E6000H",
@@ -48,10 +48,30 @@ CONF_SERIAL = "serial"
 CONF_MODEL = "model"
 CONF_POLL_INTERVAL = "poll_interval"
 
-# Phase 3 (control) options, scaffolded now so the options schema is stable:
-# the 22045 watchdog is refreshed every keepalive interval with timeoutS set
-# to control_timeout — 3 missed refreshes before the device reverts.
+# Control options: the 22045 watchdog is refreshed every keepalive interval
+# with timeoutS set to control_timeout - 3 missed refreshes before the device
+# reverts to self-management.
 CONF_KEEPALIVE_INTERVAL = "keepalive_interval"
 CONF_CONTROL_TIMEOUT = "control_timeout"
 DEFAULT_KEEPALIVE_INTERVAL = 30
 DEFAULT_CONTROL_TIMEOUT = 90
+
+CONF_MAX_CHARGE_POWER = "max_charge_power"
+CONF_MAX_DISCHARGE_POWER = "max_discharge_power"
+# Grid-compliant conservative default (the E6000's compliant grid output);
+# users raise it in options. The E6000 inverter itself is rated 2600 W.
+DEFAULT_MAX_POWER = 800
+POWER_LIMIT_MIN = 100
+POWER_LIMIT_MAX = 5000
+
+# Spec §4.4 ranges for 22045. Control recon 2026-08-09: the device accepts
+# values beyond ±5000 with code 200 and stores them - there is NO device-side
+# validation, so the client-side checks are the only protection.
+CONTROL_POWER_MAX = 5000
+CONTROL_TIMEOUT_MIN = 1
+CONTROL_TIMEOUT_MAX = 3600
+
+# Releasing control writes a short 0 W hold first so the battery idles within
+# seconds, instead of running the last setpoint out over the full watchdog
+# window; when it expires the device resumes self-management.
+RELEASE_TIMEOUT_S = 5
