@@ -1,7 +1,7 @@
 """Persistent TCP connection manager for SAMDUO battery devices.
 
 The singleton-per-(host, port) registry is not an optimization here but a
-correctness requirement: the Nex E6000 serves exactly one TCP client — a
+correctness requirement: the Nex E6000 serves exactly one TCP client - a
 second concurrent connection is accepted at the socket level but never
 answered (recon 2026-08-09).
 """

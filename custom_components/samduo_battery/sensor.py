@@ -29,7 +29,7 @@ from .coordinator import SamduoBatteryCoordinator
 # Sign convention on every power value: positive = discharging, negative =
 # charging. This is the device's own convention and matches EMHASS's
 # p_batt_forecast natively. Other battery integrations may use the opposite
-# convention — values are passed through unmodified, never flipped.
+# convention - values are passed through unmodified, never flipped.
 
 # (key, name, unit, device_class, state_class, icon, diagnostic)
 # icon None = let HA pick. The SOC sensor must not get a static icon: a

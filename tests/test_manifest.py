@@ -1,7 +1,7 @@
 """Guards on manifest.json and hacs.json.
 
 The semver check is what keeps the beta flow working: the manifest must stay
-plain X.Y.Z — pre-release suffixes (-beta.N) live only in git tags, because
+plain X.Y.Z - pre-release suffixes (-beta.N) live only in git tags, because
 HACS and hassfest reject them in the manifest.
 """
 
