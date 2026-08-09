@@ -1,0 +1,80 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug!
+
+        **Was your issue closed but the problem persists?** Due to GitHub permissions,
+        only maintainers can reopen issues. Please comment on the closed issue
+        describing what still doesn't work, and we will reopen it for you.
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.7.2"
+    validations:
+      required: true
+  - type: input
+    id: integration_version
+    attributes:
+      label: Integration version
+      description: Settings > Devices & Services > SAMDUO Local TCP Control, or the HACS entry.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: device_model
+    attributes:
+      label: Device model
+      options:
+        - Nex E6000
+        - Nex E6000H
+        - Nex P2800 Pro
+        - Nex BP2800
+        - Other / unknown
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Device firmware version
+      description: Shown in the SAMDUO app under the device settings, or as the "ver" value when the device is discovered.
+      placeholder: "0.0.0.236"
+    validations:
+      required: true
+  - type: checkboxes
+    id: preconditions
+    attributes:
+      label: Preconditions checked
+      options:
+        - label: The "HEMS Managed" toggle in the SAMDUO app is switched OFF
+        - label: The SAMDUO app was closed while reproducing (the device answers only one TCP client)
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug description
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log entries
+      description: Settings > System > Logs, filter on "samduo". Remove anything you consider private.
+      render: text
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
