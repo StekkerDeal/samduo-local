@@ -1,0 +1,72 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SAMDUO Local TCP Control",
+        "description": "Verbind met een SAMDUO-batterij via je lokale netwerk. Het serienummer wordt automatisch van het apparaat gelezen. Zet de schakelaar 'HEMS Managed' in de SAMDUO-app UIT, en let op: het apparaat beantwoordt maar een TCP-verbinding tegelijk.",
+        "data": {
+          "host": "Host",
+          "port": "Poort",
+          "name": "Naam"
+        },
+        "data_description": {
+          "host": "IP-adres of hostnaam van de batterij (bijv. 192.168.1.95)",
+          "port": "TCP-poort van de lokale API (standaard 3335)",
+          "name": "Weergavenaam voor deze batterij in Home Assistant"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "SAMDUO-batterij gevonden",
+        "description": "De {model} op {host} (serienummer {serial}) toevoegen? Zet eerst de schakelaar 'HEMS Managed' in de SAMDUO-app UIT voordat je besturingsfuncties gebruikt.",
+        "data": {
+          "name": "Naam"
+        },
+        "data_description": {
+          "name": "Weergavenaam voor deze batterij in Home Assistant"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met het apparaat. Controleer host en poort, en controleer of niets anders (bijv. de SAMDUO-app) de enige TCP-verbinding van het apparaat bezet houdt."
+    },
+    "abort": {
+      "already_configured": "Deze batterij is al geconfigureerd",
+      "not_supported": "Dit SAMDUO-apparaat is geen ondersteunde batterij"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opties SAMDUO-batterij",
+        "data": {
+          "host": "Host",
+          "port": "Poort",
+          "name": "Naam",
+          "poll_interval": "Polling-interval (seconden)",
+          "max_charge_power": "Maximaal laadvermogen (W)",
+          "max_discharge_power": "Maximaal ontlaadvermogen (W)",
+          "keepalive_interval": "Keepalive-interval setpoint (seconden)",
+          "control_timeout": "Watchdog-timeout besturing (seconden)"
+        },
+        "data_description": {
+          "host": "IP-adres of hostnaam van de batterij",
+          "port": "TCP-poort van de lokale API (standaard 3335)",
+          "name": "Weergavenaam voor deze batterij in Home Assistant",
+          "poll_interval": "Hoe vaak de batterij wordt uitgelezen (standaard 5)",
+          "max_charge_power": "Bovengrens voor laadcommando's (standaard 800, het netconforme vermogen; maximaal 2600, het omvormervermogen. Houd dit gelijk aan of lager dan de limiet in de SAMDUO-app)",
+          "max_discharge_power": "Bovengrens voor ontlaadcommando's (standaard 800; maximaal 2600. Houd dit gelijk aan of lager dan de limiet in de SAMDUO-app)",
+          "keepalive_interval": "Hoe vaak een actief setpoint opnieuw naar de batterij wordt gestuurd (standaard 30)",
+          "control_timeout": "Hoe lang de batterij een setpoint zonder verversing vasthoudt voordat hij teruggaat naar eigen beheer (standaard 90; moet groter zijn dan het keepalive-interval)"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "set_failed": {
+      "message": "Het commando voor {entity} heeft de batterij niet bereikt. Controleer de verbinding (houdt de SAMDUO-app de enige TCP-verbinding bezet?) en probeer het opnieuw."
+    },
+    "set_rejected": {
+      "message": "{entity} kan niet op die waarde worden ingesteld: {reason}"
+    }
+  }
+}

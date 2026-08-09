@@ -1,0 +1,72 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SAMDUO Local TCP Control",
+        "description": "Verbinden Sie eine SAMDUO-Batterie über Ihr lokales Netzwerk. Die Seriennummer wird automatisch vom Gerät gelesen. Schalten Sie den Schalter 'HEMS Managed' in der SAMDUO-App AUS und beachten Sie: das Gerät beantwortet nur eine TCP-Verbindung gleichzeitig.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname der Batterie (z. B. 192.168.1.95)",
+          "port": "TCP-Port der lokalen API (Standard 3335)",
+          "name": "Anzeigename dieser Batterie in Home Assistant"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "SAMDUO-Batterie gefunden",
+        "description": "Die {model} unter {host} (Seriennummer {serial}) hinzufügen? Schalten Sie zuerst den Schalter 'HEMS Managed' in der SAMDUO-App AUS, bevor Sie Steuerfunktionen verwenden.",
+        "data": {
+          "name": "Name"
+        },
+        "data_description": {
+          "name": "Anzeigename dieser Batterie in Home Assistant"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zum Gerät nicht möglich. Prüfen Sie Host und Port, und stellen Sie sicher, dass nichts anderes (z. B. die SAMDUO-App) die einzige TCP-Verbindung des Geräts belegt."
+    },
+    "abort": {
+      "already_configured": "Diese Batterie ist bereits konfiguriert",
+      "not_supported": "Dieses SAMDUO-Gerät ist keine unterstützte Batterie"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Optionen der SAMDUO-Batterie",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name",
+          "poll_interval": "Abfrageintervall (Sekunden)",
+          "max_charge_power": "Maximale Ladeleistung (W)",
+          "max_discharge_power": "Maximale Entladeleistung (W)",
+          "keepalive_interval": "Keepalive-Intervall des Sollwerts (Sekunden)",
+          "control_timeout": "Watchdog-Timeout der Steuerung (Sekunden)"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname der Batterie",
+          "port": "TCP-Port der lokalen API (Standard 3335)",
+          "name": "Anzeigename dieser Batterie in Home Assistant",
+          "poll_interval": "Wie oft die Batterie abgefragt wird (Standard 5)",
+          "max_charge_power": "Obergrenze für Ladebefehle (Standard 800, die netzkonforme Leistung; maximal 2600, die Wechselrichterleistung. Halten Sie den Wert auf oder unter dem Limit in der SAMDUO-App)",
+          "max_discharge_power": "Obergrenze für Entladebefehle (Standard 800; maximal 2600. Halten Sie den Wert auf oder unter dem Limit in der SAMDUO-App)",
+          "keepalive_interval": "Wie oft ein aktiver Sollwert erneut an die Batterie gesendet wird (Standard 30)",
+          "control_timeout": "Wie lange die Batterie einen Sollwert ohne Auffrischung hält, bevor sie zur Eigenregelung zurückkehrt (Standard 90; muss größer als das Keepalive-Intervall sein)"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "set_failed": {
+      "message": "Der Befehl für {entity} hat die Batterie nicht erreicht. Prüfen Sie die Verbindung (belegt die SAMDUO-App die einzige TCP-Verbindung des Geräts?) und versuchen Sie es erneut."
+    },
+    "set_rejected": {
+      "message": "{entity} kann nicht auf diesen Wert gesetzt werden: {reason}"
+    }
+  }
+}

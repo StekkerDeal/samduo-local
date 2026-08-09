@@ -1,0 +1,72 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SAMDUO Local TCP Control",
+        "description": "Connectez une batterie SAMDUO via votre réseau local. Le numéro de série est lu automatiquement depuis l'appareil. Désactivez l'option 'HEMS Managed' dans l'application SAMDUO et notez que l'appareil ne répond qu'à une seule connexion TCP à la fois.",
+        "data": {
+          "host": "Hôte",
+          "port": "Port",
+          "name": "Nom"
+        },
+        "data_description": {
+          "host": "Adresse IP ou nom d'hôte de la batterie (p. ex. 192.168.1.95)",
+          "port": "Port TCP de l'API locale (3335 par défaut)",
+          "name": "Nom d'affichage de cette batterie dans Home Assistant"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Batterie SAMDUO détectée",
+        "description": "Ajouter la {model} à l'adresse {host} (numéro de série {serial}) ? Désactivez d'abord l'option 'HEMS Managed' dans l'application SAMDUO avant d'utiliser les fonctions de pilotage.",
+        "data": {
+          "name": "Nom"
+        },
+        "data_description": {
+          "name": "Nom d'affichage de cette batterie dans Home Assistant"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter à l'appareil. Vérifiez l'hôte et le port, et assurez-vous que rien d'autre (p. ex. l'application SAMDUO) n'occupe l'unique connexion TCP de l'appareil."
+    },
+    "abort": {
+      "already_configured": "Cette batterie est déjà configurée",
+      "not_supported": "Cet appareil SAMDUO n'est pas une batterie prise en charge"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options de la batterie SAMDUO",
+        "data": {
+          "host": "Hôte",
+          "port": "Port",
+          "name": "Nom",
+          "poll_interval": "Intervalle d'interrogation (secondes)",
+          "max_charge_power": "Puissance de charge maximale (W)",
+          "max_discharge_power": "Puissance de décharge maximale (W)",
+          "keepalive_interval": "Intervalle keepalive de la consigne (secondes)",
+          "control_timeout": "Délai du watchdog de pilotage (secondes)"
+        },
+        "data_description": {
+          "host": "Adresse IP ou nom d'hôte de la batterie",
+          "port": "Port TCP de l'API locale (3335 par défaut)",
+          "name": "Nom d'affichage de cette batterie dans Home Assistant",
+          "poll_interval": "Fréquence d'interrogation de la batterie (5 par défaut)",
+          "max_charge_power": "Limite supérieure des commandes de charge (800 par défaut, la puissance conforme au réseau ; 2600 maximum, la puissance de l'onduleur. Gardez cette valeur inférieure ou égale à la limite définie dans l'application SAMDUO)",
+          "max_discharge_power": "Limite supérieure des commandes de décharge (800 par défaut ; 2600 maximum. Gardez cette valeur inférieure ou égale à la limite définie dans l'application SAMDUO)",
+          "keepalive_interval": "Fréquence de renvoi d'une consigne active à la batterie (30 par défaut)",
+          "control_timeout": "Durée pendant laquelle la batterie maintient une consigne sans rafraîchissement avant de reprendre sa propre gestion (90 par défaut ; doit être supérieure à l'intervalle keepalive)"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "set_failed": {
+      "message": "La commande pour {entity} n'a pas atteint la batterie. Vérifiez la connexion (l'application SAMDUO occupe-t-elle l'unique connexion TCP ?) et réessayez."
+    },
+    "set_rejected": {
+      "message": "{entity} ne peut pas être réglé sur cette valeur : {reason}"
+    }
+  }
+}
