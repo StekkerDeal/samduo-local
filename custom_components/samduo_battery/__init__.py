@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 
 from .const import (
     CONF_CONTROL_TIMEOUT,
@@ -30,7 +31,7 @@ from .tcp_manager import TCPClientManager
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.SWITCH, Platform.BUTTON]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SWITCH, Platform.BUTTON]
 
 
 def resolve_control_options(options: dict) -> tuple[int, int, int, int]:
@@ -79,6 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         max_discharge_power=max_discharge,
         keepalive_interval=keepalive,
         control_timeout=control_timeout,
+        entry_id=entry.entry_id,
     )
     await coordinator.async_config_entry_first_refresh()
 
@@ -98,6 +100,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
         coordinator: SamduoBatteryCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        # Options changes reload the entry; a stale conflict issue must not
+        # outlive the coordinator state that raised it.
+        ir.async_delete_issue(hass, DOMAIN, coordinator.hems_issue_id)
         await coordinator.client.async_disconnect()
         TCPClientManager.remove_instance(entry.data[CONF_HOST], entry.data[CONF_PORT])
     return unloaded

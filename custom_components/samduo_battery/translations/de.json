@@ -80,6 +80,9 @@
       "battery_status": {"name": "Batteriestatus"},
       "inverter_status": {"name": "Wechselrichterstatus"}
     },
+    "binary_sensor": {
+      "external_control_blocked": {"name": "Externe Steuerung blockiert"}
+    },
     "number": {
       "power_setpoint": {"name": "Leistungssollwert"}
     },
@@ -88,6 +91,12 @@
     },
     "button": {
       "release_control": {"name": "Steuerung freigeben"}
+    }
+  },
+  "issues": {
+    "hems_blocked": {
+      "title": "{device_name} ignoriert Leistungsbefehle",
+      "description": "Die Batterie bestätigt jeden Sollwert, aber die gemessene Leistung folgt den Befehlen nicht. Das passiert, wenn 'HEMS Managed' auf der Seite Device Settings der Batterie in der SAMDUO-App eingeschaltet ist (zusammen mit 'Self Consumption' in den allgemeinen Haus-Einstellungen): die Batterie regelt sich dann anhand ihres eigenen P1-Zählers selbst und ignoriert externe Befehle ohne Fehlermeldung.\n\nSchalten Sie 'HEMS Managed' auf der Seite Device Settings der Batterie aus, um die Batterie aus Home Assistant zu steuern. Umgekehrt gilt: Mit ausgeschaltetem 'HEMS Managed' tut die Batterie von sich aus nichts und führt nur Befehle aus Home Assistant aus."
     }
   },
   "exceptions": {

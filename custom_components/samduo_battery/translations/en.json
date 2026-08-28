@@ -80,6 +80,9 @@
       "battery_status": {"name": "Battery Status"},
       "inverter_status": {"name": "Inverter Status"}
     },
+    "binary_sensor": {
+      "external_control_blocked": {"name": "External control blocked"}
+    },
     "number": {
       "power_setpoint": {"name": "Power Setpoint"}
     },
@@ -88,6 +91,12 @@
     },
     "button": {
       "release_control": {"name": "Release Control"}
+    }
+  },
+  "issues": {
+    "hems_blocked": {
+      "title": "{device_name} is ignoring power commands",
+      "description": "The battery confirms every power setpoint but its measured power does not follow the commands. This happens when 'HEMS Managed' is switched ON on the battery's Device Settings page in the SAMDUO app (together with 'Self Consumption' in the general home settings): the battery then manages itself using its own P1 meter and silently ignores external commands.\n\nTo control the battery from Home Assistant, switch 'HEMS Managed' OFF on the battery's Device Settings page. The inverse also holds: with 'HEMS Managed' OFF the battery does nothing on its own and only acts on commands from Home Assistant."
     }
   },
   "exceptions": {

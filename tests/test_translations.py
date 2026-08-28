@@ -42,10 +42,12 @@ def test_all_translation_keys_have_names() -> None:
     entity = _load(COMPONENT / "strings.json")["entity"]
     used = {
         "sensor": {row[0] for row in _SENSORS} | {"battery_status", "inverter_status"},
+        "binary_sensor": {"external_control_blocked"},
         "number": {"power_setpoint"},
         "switch": {"backup_output"},
         "button": {"release_control"},
     }
+    assert set(entity) == set(used)
     for platform, keys in used.items():
         for key in keys:
             assert key in entity[platform], f"missing entity.{platform}.{key} in strings.json"

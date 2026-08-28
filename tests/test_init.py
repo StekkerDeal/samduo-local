@@ -38,6 +38,24 @@ async def test_setup_and_unload_entry(hass: HomeAssistant, mock_client) -> None:
     mock_client.async_disconnect.assert_awaited()
 
 
+async def test_unload_deletes_conflict_issue(hass: HomeAssistant, mock_client) -> None:
+    from homeassistant.helpers import issue_registry as ir
+
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator._set_blocked(-250, 400)
+    registry = ir.async_get(hass)
+    assert registry.async_get_issue(DOMAIN, coordinator.hems_issue_id) is not None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert registry.async_get_issue(DOMAIN, coordinator.hems_issue_id) is None
+
+
 async def test_setup_retries_when_connect_fails(hass: HomeAssistant, mock_client) -> None:
     mock_client.async_connect.side_effect = OSError("no route")
     entry = _make_entry()

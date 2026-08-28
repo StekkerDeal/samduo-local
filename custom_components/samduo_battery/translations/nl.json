@@ -80,6 +80,9 @@
       "battery_status": {"name": "Batterijstatus"},
       "inverter_status": {"name": "Omvormerstatus"}
     },
+    "binary_sensor": {
+      "external_control_blocked": {"name": "Externe besturing geblokkeerd"}
+    },
     "number": {
       "power_setpoint": {"name": "Vermogenssetpoint"}
     },
@@ -88,6 +91,12 @@
     },
     "button": {
       "release_control": {"name": "Besturing vrijgeven"}
+    }
+  },
+  "issues": {
+    "hems_blocked": {
+      "title": "{device_name} negeert vermogenscommando's",
+      "description": "De batterij bevestigt elk setpoint, maar het gemeten vermogen volgt de commando's niet. Dit gebeurt als 'HEMS Managed' AAN staat op de pagina Device Settings van de batterij in de SAMDUO-app (samen met 'Self Consumption' in de algemene huisinstellingen): de batterij regelt zichzelf dan op basis van zijn eigen P1-meter en negeert externe commando's zonder foutmelding.\n\nZet 'HEMS Managed' UIT op de pagina Device Settings van de batterij om de batterij vanuit Home Assistant te besturen. Andersom geldt ook: met 'HEMS Managed' UIT doet de batterij zelf niets en voert hij alleen commando's uit Home Assistant uit."
     }
   },
   "exceptions": {

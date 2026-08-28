@@ -10,7 +10,9 @@ import logging
 import time
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
+from custom_components.samduo_battery.const import DOMAIN, LEARN_MORE_URL_HEMS
 from custom_components.samduo_battery.coordinator import SamduoBatteryCoordinator
 
 from .conftest import MOCK_SERIAL, with_power
@@ -176,6 +178,37 @@ async def test_suppression_holds_a_confirmed_block(hass: HomeAssistant, mock_cli
     mock_client.get_device_data.return_value = with_power(30, battery_soc=99.5)
     await coordinator.async_refresh()
     assert coordinator.control_blocked
+
+
+async def test_repair_issue_created_and_deleted(hass: HomeAssistant, mock_client) -> None:
+    coordinator = _make_coordinator(hass, mock_client)
+    registry = ir.async_get(hass)
+    await _command(coordinator, mock_client, -250, 400)
+    for _ in range(3):
+        await coordinator.async_refresh()
+
+    issue = registry.async_get_issue(DOMAIN, "hems_blocked_test_entry")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert not issue.is_fixable
+    assert issue.learn_more_url == LEARN_MORE_URL_HEMS
+    assert issue.translation_placeholders == {"device_name": "Test Battery"}
+
+    mock_client.get_device_data.return_value = with_power(-248)
+    await coordinator.async_refresh()
+    assert registry.async_get_issue(DOMAIN, "hems_blocked_test_entry") is None
+
+
+async def test_repair_issue_deleted_on_release(hass: HomeAssistant, mock_client) -> None:
+    coordinator = _make_coordinator(hass, mock_client)
+    registry = ir.async_get(hass)
+    await _command(coordinator, mock_client, -250, 400)
+    for _ in range(3):
+        await coordinator.async_refresh()
+    assert registry.async_get_issue(DOMAIN, "hems_blocked_test_entry") is not None
+
+    assert await coordinator.async_release_control()
+    assert registry.async_get_issue(DOMAIN, "hems_blocked_test_entry") is None
 
 
 async def test_logs_only_on_transitions(hass: HomeAssistant, mock_client, caplog) -> None:

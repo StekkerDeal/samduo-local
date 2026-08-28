@@ -80,6 +80,9 @@
       "battery_status": {"name": "État de la batterie"},
       "inverter_status": {"name": "État de l'onduleur"}
     },
+    "binary_sensor": {
+      "external_control_blocked": {"name": "Contrôle externe bloqué"}
+    },
     "number": {
       "power_setpoint": {"name": "Consigne de puissance"}
     },
@@ -88,6 +91,12 @@
     },
     "button": {
       "release_control": {"name": "Libérer le contrôle"}
+    }
+  },
+  "issues": {
+    "hems_blocked": {
+      "title": "{device_name} ignore les commandes de puissance",
+      "description": "La batterie confirme chaque consigne, mais la puissance mesurée ne suit pas les commandes. Cela se produit lorsque 'HEMS Managed' est activé sur la page Device Settings de la batterie dans l'application SAMDUO (avec 'Self Consumption' dans les réglages généraux du domicile) : la batterie se régule alors elle-même à partir de son propre compteur P1 et ignore les commandes externes sans signaler d'erreur.\n\nDésactivez 'HEMS Managed' sur la page Device Settings de la batterie pour piloter la batterie depuis Home Assistant. L'inverse vaut aussi : avec 'HEMS Managed' désactivé, la batterie ne fait rien d'elle-même et n'exécute que les commandes de Home Assistant."
     }
   },
   "exceptions": {

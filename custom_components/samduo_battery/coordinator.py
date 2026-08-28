@@ -10,6 +10,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -18,6 +19,8 @@ from .const import (
     DEFAULT_KEEPALIVE_INTERVAL,
     DEFAULT_MAX_POWER,
     DOMAIN,
+    ISSUE_HEMS_BLOCKED,
+    LEARN_MORE_URL_HEMS,
     MANUFACTURER,
     MIN_POLL_INTERVAL,
     RELEASE_TIMEOUT_S,
@@ -204,6 +207,10 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     # ── HEMS-conflict tracking detector ────────────────────────────────────
 
+    @property
+    def hems_issue_id(self) -> str:
+        return f"{ISSUE_HEMS_BLOCKED}_{self.entry_id or self.hub_identifier}"
+
     def _evaluate_control_tracking(self, data: dict[str, Any]) -> None:
         """Confirm HEMS refusal from delivered power diverging from the
         setpoint; the 22046 readback stores the refused config and sees
@@ -255,6 +262,16 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             delivered,
             self._track_streak,
         )
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            self.hems_issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_HEMS_BLOCKED,
+            translation_placeholders={"device_name": self.device_name},
+            learn_more_url=LEARN_MORE_URL_HEMS,
+        )
 
     def _clear_tracking(self, *, release: bool = False) -> None:
         """Reset the streak; log once on the blocked-to-clear transition."""
@@ -267,6 +284,7 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.info("Control released while setpoints were being ignored - conflict state cleared")
         else:
             _LOGGER.info("Battery is following setpoints again - conflict state cleared")
+        ir.async_delete_issue(self.hass, DOMAIN, self.hems_issue_id)
 
     # ── Control writes ─────────────────────────────────────────────────────
 
