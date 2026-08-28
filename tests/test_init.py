@@ -56,6 +56,37 @@ async def test_unload_deletes_conflict_issue(hass: HomeAssistant, mock_client) -
     assert registry.async_get_issue(DOMAIN, coordinator.hems_issue_id) is None
 
 
+async def test_corrected_options_raise_and_clear_repair_issue(hass: HomeAssistant, mock_client) -> None:
+    from homeassistant.helpers import issue_registry as ir
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_SERIAL,
+        data={**MOCK_USER_INPUT, "serial": MOCK_SERIAL, "model": "Nex E6000"},
+        options={"keepalive_interval": 60, "control_timeout": 30},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = ir.async_get(hass)
+    issue_id = f"control_timeout_corrected_{entry.entry_id}"
+    issue = registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert not issue.is_fixable
+    assert issue.translation_placeholders == {
+        "device_name": "Test Battery",
+        "configured": "30",
+        "keepalive": "60",
+        "effective": "180",
+    }
+
+    # Fixing the options reloads the entry, which clears the issue.
+    hass.config_entries.async_update_entry(entry, options={"keepalive_interval": 60, "control_timeout": 300})
+    await hass.async_block_till_done()
+    assert registry.async_get_issue(DOMAIN, issue_id) is None
+
+
 async def test_setup_retries_when_connect_fails(hass: HomeAssistant, mock_client) -> None:
     mock_client.async_connect.side_effect = OSError("no route")
     entry = _make_entry()

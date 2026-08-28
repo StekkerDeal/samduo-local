@@ -24,6 +24,7 @@ from .const import (
     DEFAULT_MAX_POWER,
     DEFAULT_POLL_INTERVAL,
     DOMAIN,
+    ISSUE_CONTROL_TIMEOUT_CORRECTED,
 )
 from .coordinator import SamduoBatteryCoordinator
 from .tcp_client import SamduoTcpClient
@@ -34,8 +35,9 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SWITCH, Platform.BUTTON]
 
 
-def resolve_control_options(options: dict) -> tuple[int, int, int, int]:
-    """Effective (max_charge, max_discharge, keepalive, control_timeout).
+def resolve_control_options(options: dict) -> tuple[int, int, int, int, bool]:
+    """Effective (max_charge, max_discharge, keepalive, control_timeout,
+    corrected).
 
     Resolved at setup instead of migrating the entry, so a rollback keeps
     working. A control timeout at or below the keepalive interval would let
@@ -46,7 +48,8 @@ def resolve_control_options(options: dict) -> tuple[int, int, int, int]:
     discharge = int(options.get(CONF_MAX_DISCHARGE_POWER, DEFAULT_MAX_POWER))
     keepalive = int(options.get(CONF_KEEPALIVE_INTERVAL, DEFAULT_KEEPALIVE_INTERVAL))
     timeout = int(options.get(CONF_CONTROL_TIMEOUT, DEFAULT_CONTROL_TIMEOUT))
-    if timeout <= keepalive:
+    corrected = timeout <= keepalive
+    if corrected:
         _LOGGER.warning(
             "Control timeout (%d s) must exceed the keepalive interval (%d s) - using %d s",
             timeout,
@@ -54,7 +57,7 @@ def resolve_control_options(options: dict) -> tuple[int, int, int, int]:
             keepalive * 3,
         )
         timeout = keepalive * 3
-    return charge, discharge, keepalive, timeout
+    return charge, discharge, keepalive, timeout, corrected
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -68,7 +71,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (TimeoutError, OSError, ConnectionError) as exc:
         raise ConfigEntryNotReady(f"Cannot connect to {host}:{port} - {exc}") from exc
 
-    max_charge, max_discharge, keepalive, control_timeout = resolve_control_options(entry.options)
+    max_charge, max_discharge, keepalive, control_timeout, corrected = resolve_control_options(entry.options)
+    issue_id = f"{ISSUE_CONTROL_TIMEOUT_CORRECTED}_{entry.entry_id}"
+    if corrected:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_CONTROL_TIMEOUT_CORRECTED,
+            translation_placeholders={
+                "device_name": name,
+                "configured": str(entry.options.get(CONF_CONTROL_TIMEOUT, DEFAULT_CONTROL_TIMEOUT)),
+                "keepalive": str(keepalive),
+                "effective": str(control_timeout),
+            },
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
     coordinator = SamduoBatteryCoordinator(
         hass,
         client,

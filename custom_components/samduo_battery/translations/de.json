@@ -97,6 +97,10 @@
     "hems_blocked": {
       "title": "{device_name} ignoriert Leistungsbefehle",
       "description": "Die Batterie bestätigt jeden Sollwert, aber die gemessene Leistung folgt den Befehlen nicht. Das passiert, wenn 'HEMS Managed' auf der Seite Device Settings der Batterie in der SAMDUO-App eingeschaltet ist (zusammen mit 'Self Consumption' in den allgemeinen Haus-Einstellungen): die Batterie regelt sich dann anhand ihres eigenen P1-Zählers selbst und ignoriert externe Befehle ohne Fehlermeldung.\n\nSchalten Sie 'HEMS Managed' auf der Seite Device Settings der Batterie aus, um die Batterie aus Home Assistant zu steuern. Umgekehrt gilt: Mit ausgeschaltetem 'HEMS Managed' tut die Batterie von sich aus nichts und führt nur Befehle aus Home Assistant aus."
+    },
+    "control_timeout_corrected": {
+      "title": "Watchdog-Timeout der Steuerung für {device_name} wurde korrigiert",
+      "description": "Das eingestellte Watchdog-Timeout der Steuerung ({configured} s) ist nicht größer als das Keepalive-Intervall ({keepalive} s), wodurch die Batterie zwischen zwei Auffrischungen in die Eigenregelung zurückfallen würde. Die Integration verwendet stattdessen {effective} s. Setzen Sie 'Watchdog-Timeout der Steuerung' in den Integrationsoptionen über das Keepalive-Intervall, um diese Korrektur dauerhaft zu machen."
     }
   },
   "exceptions": {

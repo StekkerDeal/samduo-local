@@ -82,6 +82,7 @@ CONTROL_TIMEOUT_MAX = 3600
 # window; when it expires the device resumes self-management.
 RELEASE_TIMEOUT_S = 5
 
-# Repair issue id and the README anchor for the HEMS conflict.
+# Repair issue ids and the README anchor for the HEMS conflict.
 ISSUE_HEMS_BLOCKED = "hems_blocked"
+ISSUE_CONTROL_TIMEOUT_CORRECTED = "control_timeout_corrected"
 LEARN_MORE_URL_HEMS = "https://github.com/StekkerDeal/samduo-local#hems-managed-and-external-control"

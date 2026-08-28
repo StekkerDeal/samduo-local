@@ -97,6 +97,10 @@
     "hems_blocked": {
       "title": "{device_name} negeert vermogenscommando's",
       "description": "De batterij bevestigt elk setpoint, maar het gemeten vermogen volgt de commando's niet. Dit gebeurt als 'HEMS Managed' AAN staat op de pagina Device Settings van de batterij in de SAMDUO-app (samen met 'Self Consumption' in de algemene huisinstellingen): de batterij regelt zichzelf dan op basis van zijn eigen P1-meter en negeert externe commando's zonder foutmelding.\n\nZet 'HEMS Managed' UIT op de pagina Device Settings van de batterij om de batterij vanuit Home Assistant te besturen. Andersom geldt ook: met 'HEMS Managed' UIT doet de batterij zelf niets en voert hij alleen commando's uit Home Assistant uit."
+    },
+    "control_timeout_corrected": {
+      "title": "Watchdog-timeout van {device_name} is gecorrigeerd",
+      "description": "De ingestelde watchdog-timeout voor besturing ({configured} s) is niet groter dan het keepalive-interval ({keepalive} s), waardoor de batterij tussen twee verversingen zou terugvallen op eigen beheer. De integratie gebruikt daarom {effective} s. Zet 'Watchdog-timeout besturing' in de integratie-opties hoger dan het keepalive-interval om deze correctie definitief te maken."
     }
   },
   "exceptions": {
