@@ -61,6 +61,35 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "battery_soc": {"name": "Batterie-SOC"},
+      "battery_power": {"name": "Batterieleistung"},
+      "backup_power": {"name": "Backup-Leistung"},
+      "energy_charged": {"name": "Geladene Energie"},
+      "energy_discharged": {"name": "Entladene Energie"},
+      "grid_voltage": {"name": "Netzspannung"},
+      "grid_frequency": {"name": "Netzfrequenz"},
+      "offgrid_voltage": {"name": "Off-Grid-Spannung"},
+      "battery_voltage": {"name": "Batteriespannung"},
+      "battery_soh": {"name": "Batterie-SOH"},
+      "temperature_1": {"name": "Wechselrichtertemperatur 1"},
+      "temperature_2": {"name": "Wechselrichtertemperatur 2"},
+      "error_code": {"name": "Fehlercode"},
+      "control_time_left": {"name": "Verbleibende Steuerungszeit"},
+      "battery_status": {"name": "Batteriestatus"},
+      "inverter_status": {"name": "Wechselrichterstatus"}
+    },
+    "number": {
+      "power_setpoint": {"name": "Leistungssollwert"}
+    },
+    "switch": {
+      "backup_output": {"name": "Backup-Ausgang"}
+    },
+    "button": {
+      "release_control": {"name": "Steuerung freigeben"}
+    }
+  },
   "exceptions": {
     "set_failed": {
       "message": "Der Befehl für {entity} hat die Batterie nicht erreicht. Prüfen Sie die Verbindung (belegt die SAMDUO-App die einzige TCP-Verbindung des Geräts?) und versuchen Sie es erneut."

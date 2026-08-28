@@ -61,6 +61,35 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "battery_soc": {"name": "Batterij-SOC"},
+      "battery_power": {"name": "Batterijvermogen"},
+      "backup_power": {"name": "Back-upvermogen"},
+      "energy_charged": {"name": "Geladen energie"},
+      "energy_discharged": {"name": "Ontladen energie"},
+      "grid_voltage": {"name": "Netspanning"},
+      "grid_frequency": {"name": "Netfrequentie"},
+      "offgrid_voltage": {"name": "Off-gridspanning"},
+      "battery_voltage": {"name": "Batterijspanning"},
+      "battery_soh": {"name": "Batterij-SOH"},
+      "temperature_1": {"name": "Omvormertemperatuur 1"},
+      "temperature_2": {"name": "Omvormertemperatuur 2"},
+      "error_code": {"name": "Foutcode"},
+      "control_time_left": {"name": "Resterende besturingstijd"},
+      "battery_status": {"name": "Batterijstatus"},
+      "inverter_status": {"name": "Omvormerstatus"}
+    },
+    "number": {
+      "power_setpoint": {"name": "Vermogenssetpoint"}
+    },
+    "switch": {
+      "backup_output": {"name": "Back-upuitgang"}
+    },
+    "button": {
+      "release_control": {"name": "Besturing vrijgeven"}
+    }
+  },
   "exceptions": {
     "set_failed": {
       "message": "Het commando voor {entity} heeft de batterij niet bereikt. Controleer de verbinding (houdt de SAMDUO-app de enige TCP-verbinding bezet?) en probeer het opnieuw."

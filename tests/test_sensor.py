@@ -61,7 +61,7 @@ async def test_soc_sensor_has_no_static_icon(hass: HomeAssistant, mock_client) -
     battery device class provides the dynamic level icon."""
     soc_rows = [s for s in _SENSORS if s[0] == "battery_soc"]
     assert len(soc_rows) == 1
-    assert soc_rows[0][5] is None  # icon column
+    assert soc_rows[0][4] is None  # icon column
 
     await _setup(hass)
     assert "icon" not in hass.states.get("sensor.test_battery_battery_soc").attributes

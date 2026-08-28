@@ -61,6 +61,35 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "battery_soc": {"name": "Battery SOC"},
+      "battery_power": {"name": "Battery Power"},
+      "backup_power": {"name": "Backup Power"},
+      "energy_charged": {"name": "Energy Charged"},
+      "energy_discharged": {"name": "Energy Discharged"},
+      "grid_voltage": {"name": "Grid Voltage"},
+      "grid_frequency": {"name": "Grid Frequency"},
+      "offgrid_voltage": {"name": "Off-grid Voltage"},
+      "battery_voltage": {"name": "Battery Voltage"},
+      "battery_soh": {"name": "Battery SOH"},
+      "temperature_1": {"name": "Inverter Temperature 1"},
+      "temperature_2": {"name": "Inverter Temperature 2"},
+      "error_code": {"name": "Error Code"},
+      "control_time_left": {"name": "Control Time Remaining"},
+      "battery_status": {"name": "Battery Status"},
+      "inverter_status": {"name": "Inverter Status"}
+    },
+    "number": {
+      "power_setpoint": {"name": "Power Setpoint"}
+    },
+    "switch": {
+      "backup_output": {"name": "Backup Output"}
+    },
+    "button": {
+      "release_control": {"name": "Release Control"}
+    }
+  },
   "exceptions": {
     "set_failed": {
       "message": "The command for {entity} did not reach the battery. Check the connection (is the SAMDUO app holding the device's only TCP slot?) and try again."

@@ -37,7 +37,7 @@ class SamduoReleaseControlButton(CoordinatorEntity[SamduoBatteryCoordinator], Bu
     """
 
     _attr_has_entity_name = True
-    _attr_name = "Release Control"
+    _attr_translation_key = "release_control"
     _attr_icon = "mdi:lock-open-variant"
 
     def __init__(self, coordinator: SamduoBatteryCoordinator, config_entry: ConfigEntry) -> None:
@@ -54,4 +54,4 @@ class SamduoReleaseControlButton(CoordinatorEntity[SamduoBatteryCoordinator], Bu
 
     async def async_press(self) -> None:
         if not await self.coordinator.async_release_control():
-            raise_set_failed(self._attr_name)
+            raise_set_failed(str(self.name))

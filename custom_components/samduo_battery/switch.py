@@ -37,7 +37,7 @@ class SamduoBackupSwitch(CoordinatorEntity[SamduoBatteryCoordinator], SwitchEnti
     """
 
     _attr_has_entity_name = True
-    _attr_name = "Backup Output"
+    _attr_translation_key = "backup_output"
     _attr_device_class = SwitchDeviceClass.SWITCH
     _attr_icon = "mdi:power-plug"
 
@@ -62,8 +62,8 @@ class SamduoBackupSwitch(CoordinatorEntity[SamduoBatteryCoordinator], SwitchEnti
 
     async def async_turn_on(self, **kwargs) -> None:
         if not await self.coordinator.async_set_backup(True):
-            raise_set_failed(self._attr_name)
+            raise_set_failed(str(self.name))
 
     async def async_turn_off(self, **kwargs) -> None:
         if not await self.coordinator.async_set_backup(False):
-            raise_set_failed(self._attr_name)
+            raise_set_failed(str(self.name))

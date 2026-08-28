@@ -61,6 +61,35 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "battery_soc": {"name": "SOC de la batterie"},
+      "battery_power": {"name": "Puissance de la batterie"},
+      "backup_power": {"name": "Puissance de secours"},
+      "energy_charged": {"name": "Énergie chargée"},
+      "energy_discharged": {"name": "Énergie déchargée"},
+      "grid_voltage": {"name": "Tension du réseau"},
+      "grid_frequency": {"name": "Fréquence du réseau"},
+      "offgrid_voltage": {"name": "Tension hors réseau"},
+      "battery_voltage": {"name": "Tension de la batterie"},
+      "battery_soh": {"name": "SOH de la batterie"},
+      "temperature_1": {"name": "Température de l'onduleur 1"},
+      "temperature_2": {"name": "Température de l'onduleur 2"},
+      "error_code": {"name": "Code d'erreur"},
+      "control_time_left": {"name": "Temps de contrôle restant"},
+      "battery_status": {"name": "État de la batterie"},
+      "inverter_status": {"name": "État de l'onduleur"}
+    },
+    "number": {
+      "power_setpoint": {"name": "Consigne de puissance"}
+    },
+    "switch": {
+      "backup_output": {"name": "Sortie de secours"}
+    },
+    "button": {
+      "release_control": {"name": "Libérer le contrôle"}
+    }
+  },
   "exceptions": {
     "set_failed": {
       "message": "La commande pour {entity} n'a pas atteint la batterie. Vérifiez la connexion (l'application SAMDUO occupe-t-elle l'unique connexion TCP ?) et réessayez."

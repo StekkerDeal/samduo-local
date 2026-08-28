@@ -31,42 +31,25 @@ from .coordinator import SamduoBatteryCoordinator
 # p_batt_forecast natively. Other battery integrations may use the opposite
 # convention - values are passed through unmodified, never flipped.
 
-# (key, name, unit, device_class, state_class, icon, diagnostic)
+# (key, unit, device_class, state_class, icon, diagnostic)
+# The key doubles as the translation key (entity names live in strings.json).
 # icon None = let HA pick. The SOC sensor must not get a static icon: a
 # battery-device-class percentage sensor without one gets Home Assistant's
 # dynamic level icon (mdi:battery-10 ... mdi:battery), which keeps the SOC
 # readable from the icon; a static icon would pin one glyph forever.
-_SENSORS: list[tuple[str, str, str | None, SensorDeviceClass | None, SensorStateClass, str | None, bool]] = [
-    (
-        "battery_soc",
-        "Battery SOC",
-        PERCENTAGE,
-        SensorDeviceClass.BATTERY,
-        SensorStateClass.MEASUREMENT,
-        None,
-        False,
-    ),
+_SENSORS: list[tuple[str, str | None, SensorDeviceClass | None, SensorStateClass, str | None, bool]] = [
+    ("battery_soc", PERCENTAGE, SensorDeviceClass.BATTERY, SensorStateClass.MEASUREMENT, None, False),
     (
         "battery_power",
-        "Battery Power",
         UnitOfPower.WATT,
         SensorDeviceClass.POWER,
         SensorStateClass.MEASUREMENT,
         "mdi:home-battery",
         False,
     ),
-    (
-        "backup_power",
-        "Backup Power",
-        UnitOfPower.WATT,
-        SensorDeviceClass.POWER,
-        SensorStateClass.MEASUREMENT,
-        "mdi:power-plug",
-        False,
-    ),
+    ("backup_power", UnitOfPower.WATT, SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT, "mdi:power-plug", False),
     (
         "energy_charged",
-        "Energy Charged",
         UnitOfEnergy.KILO_WATT_HOUR,
         SensorDeviceClass.ENERGY,
         SensorStateClass.TOTAL_INCREASING,
@@ -75,34 +58,16 @@ _SENSORS: list[tuple[str, str, str | None, SensorDeviceClass | None, SensorState
     ),
     (
         "energy_discharged",
-        "Energy Discharged",
         UnitOfEnergy.KILO_WATT_HOUR,
         SensorDeviceClass.ENERGY,
         SensorStateClass.TOTAL_INCREASING,
         "mdi:battery-minus",
         False,
     ),
-    (
-        "grid_voltage",
-        "Grid Voltage",
-        UnitOfElectricPotential.VOLT,
-        SensorDeviceClass.VOLTAGE,
-        SensorStateClass.MEASUREMENT,
-        None,
-        True,
-    ),
-    (
-        "grid_frequency",
-        "Grid Frequency",
-        UnitOfFrequency.HERTZ,
-        SensorDeviceClass.FREQUENCY,
-        SensorStateClass.MEASUREMENT,
-        None,
-        True,
-    ),
+    ("grid_voltage", UnitOfElectricPotential.VOLT, SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, None, True),
+    ("grid_frequency", UnitOfFrequency.HERTZ, SensorDeviceClass.FREQUENCY, SensorStateClass.MEASUREMENT, None, True),
     (
         "offgrid_voltage",
-        "Off-grid Voltage",
         UnitOfElectricPotential.VOLT,
         SensorDeviceClass.VOLTAGE,
         SensorStateClass.MEASUREMENT,
@@ -111,25 +76,15 @@ _SENSORS: list[tuple[str, str, str | None, SensorDeviceClass | None, SensorState
     ),
     (
         "battery_voltage",
-        "Battery Voltage",
         UnitOfElectricPotential.VOLT,
         SensorDeviceClass.VOLTAGE,
         SensorStateClass.MEASUREMENT,
         None,
         True,
     ),
-    (
-        "battery_soh",
-        "Battery SOH",
-        PERCENTAGE,
-        None,
-        SensorStateClass.MEASUREMENT,
-        "mdi:battery-heart-variant",
-        True,
-    ),
+    ("battery_soh", PERCENTAGE, None, SensorStateClass.MEASUREMENT, "mdi:battery-heart-variant", True),
     (
         "temperature_1",
-        "Inverter Temperature 1",
         UnitOfTemperature.CELSIUS,
         SensorDeviceClass.TEMPERATURE,
         SensorStateClass.MEASUREMENT,
@@ -138,25 +93,15 @@ _SENSORS: list[tuple[str, str, str | None, SensorDeviceClass | None, SensorState
     ),
     (
         "temperature_2",
-        "Inverter Temperature 2",
         UnitOfTemperature.CELSIUS,
         SensorDeviceClass.TEMPERATURE,
         SensorStateClass.MEASUREMENT,
         None,
         True,
     ),
-    (
-        "error_code",
-        "Error Code",
-        None,
-        None,
-        SensorStateClass.MEASUREMENT,
-        "mdi:alert-circle-outline",
-        True,
-    ),
+    ("error_code", None, None, SensorStateClass.MEASUREMENT, "mdi:alert-circle-outline", True),
     (
         "control_time_left",
-        "Control Time Remaining",
         UnitOfTime.SECONDS,
         SensorDeviceClass.DURATION,
         SensorStateClass.MEASUREMENT,
@@ -177,8 +122,8 @@ async def async_setup_entry(
 ) -> None:
     coordinator: SamduoBatteryCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[SensorEntity] = [
-        SamduoSensor(coordinator, config_entry, key, name, unit, device_class, state_class, icon, diagnostic)
-        for key, name, unit, device_class, state_class, icon, diagnostic in _SENSORS
+        SamduoSensor(coordinator, config_entry, key, unit, device_class, state_class, icon, diagnostic)
+        for key, unit, device_class, state_class, icon, diagnostic in _SENSORS
     ]
     entities.append(SamduoBatteryStatusSensor(coordinator, config_entry))
     entities.append(SamduoInverterStatusSensor(coordinator, config_entry))
@@ -195,7 +140,6 @@ class SamduoSensor(CoordinatorEntity[SamduoBatteryCoordinator], SensorEntity):
         coordinator: SamduoBatteryCoordinator,
         config_entry: ConfigEntry,
         key: str,
-        name: str,
         unit: str | None,
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass,
@@ -204,7 +148,7 @@ class SamduoSensor(CoordinatorEntity[SamduoBatteryCoordinator], SensorEntity):
     ) -> None:
         super().__init__(coordinator)
         self._key = key
-        self._attr_name = name
+        self._attr_translation_key = key
         self._attr_unique_id = f"{config_entry.entry_id}_{key}"
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
@@ -227,7 +171,7 @@ class SamduoBatteryStatusSensor(CoordinatorEntity[SamduoBatteryCoordinator], Sen
     """Charging / Discharging / Idle, derived from Battery Power."""
 
     _attr_has_entity_name = True
-    _attr_name = "Battery Status"
+    _attr_translation_key = "battery_status"
     _attr_icon = "mdi:battery-sync"
 
     def __init__(self, coordinator: SamduoBatteryCoordinator, config_entry: ConfigEntry) -> None:
@@ -255,7 +199,7 @@ class SamduoInverterStatusSensor(CoordinatorEntity[SamduoBatteryCoordinator], Se
     exposed raw so users can report them (and SAMDUO can be asked)."""
 
     _attr_has_entity_name = True
-    _attr_name = "Inverter Status"
+    _attr_translation_key = "inverter_status"
     _attr_icon = "mdi:state-machine"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 

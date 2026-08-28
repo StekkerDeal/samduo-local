@@ -43,7 +43,7 @@ class SamduoPowerSetpoint(CoordinatorEntity[SamduoBatteryCoordinator], NumberEnt
     """
 
     _attr_has_entity_name = True
-    _attr_name = "Power Setpoint"
+    _attr_translation_key = "power_setpoint"
     _attr_native_step = 1
     _attr_mode = NumberMode.BOX
     _attr_native_unit_of_measurement = UnitOfPower.WATT
@@ -76,6 +76,6 @@ class SamduoPowerSetpoint(CoordinatorEntity[SamduoBatteryCoordinator], NumberEnt
         try:
             success = await self.coordinator.async_set_power_setpoint(value)
         except ValueError as err:
-            raise_set_rejected(self._attr_name, str(err))
+            raise_set_rejected(str(self.name), str(err))
         if not success:
-            raise_set_failed(self._attr_name)
+            raise_set_failed(str(self.name))
