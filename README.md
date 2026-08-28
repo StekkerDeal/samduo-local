@@ -9,9 +9,10 @@ Local, cloud-free Home Assistant integration for SAMDUO plug-in home batteries, 
 SAMDUO Open API (JSON over TCP, port 3335). No account, no cloud, no polling of foreign
 servers - your battery data stays on your LAN.
 
-> **Status: monitoring + power control (v0.2.x).** All telemetry as sensors, including
+> **Status: monitoring + power control (v0.3.x).** All telemetry as sensors, including
 > Energy-Dashboard-ready charge/discharge counters, plus a signed power setpoint backed
-> by the device's built-in watchdog, a backup output switch, and a release-control button.
+> by the device's built-in watchdog, a backup output switch, a release-control button,
+> and detection of the app-managed mode in which the device silently ignores commands.
 
 ## Supported devices
 
@@ -30,7 +31,8 @@ it is deliberately not offered by discovery.
 - Home Assistant 2024.11 or newer.
 - The battery on the same LAN as Home Assistant (TCP port 3335 reachable).
 - **The "HEMS Managed" toggle in the SAMDUO app must be switched OFF** - with it on, the
-  device ignores external commands.
+  device ignores external commands. See
+  [HEMS Managed and external control](#hems-managed-and-external-control).
 
 ⚠️ **The device answers only one TCP client at a time.** A second connection is accepted
 but never answered. If the sensors stop updating while the SAMDUO app is open, close the
@@ -78,6 +80,7 @@ address. The serial number is read from the device automatically.
 | Inverter Status | - | `Normal` or the raw undocumented state value |
 | Error Code | - | Raw `inv_err1`; bit meanings undocumented by SAMDUO |
 | Control Time Remaining | s | Watchdog countdown of an active power setpoint |
+| External control blocked | - | binary sensor (problem, diagnostic) - on while the device confirms setpoints but ignores them, see below |
 | **Power Setpoint** | W | number - the one control surface, see below |
 | **Backup Output** | - | switch - off-grid (EPS) output on/off |
 | **Release Control** | - | button - hand the battery back to its own logic |
@@ -102,8 +105,38 @@ within the timeout - no stuck setpoints, by hardware design. Both intervals are
 configurable in the integration options.
 
 **Release Control** writes a short 0 W hold and stops the refreshing: the battery idles
-within seconds and then returns to self-management. Until you press it (or restart HA),
-an active setpoint - including 0 - is held indefinitely.
+within seconds. Note that releasing does **not** start the battery's own regulation -
+that requires the app toggles described below. Until you press it (or restart HA), an
+active setpoint - including 0 - is held indefinitely.
+
+### HEMS Managed and external control
+
+The battery has two mutually exclusive control modes, switched only in the SAMDUO app:
+
+| 'HEMS Managed' (app) | Device behaviour | Setpoints from Home Assistant |
+|---|---|---|
+| ON, plus 'Self Consumption' in the home settings | Regulates itself on its own P1 meter | **Silently ignored** |
+| OFF | Does nothing on its own | Honored |
+
+The refusal is truly silent: the device confirms every command, echoes it, stores it
+and runs the watchdog countdown - only the measured power shows that nothing happened.
+The integration therefore compares delivered power against the held setpoint on every
+poll. When they keep diverging (about half a minute at default settings) it turns on
+the **External control blocked** problem sensor and raises a repair issue naming the
+exact toggles; both clear automatically as soon as the battery follows a setpoint
+again or control is released. Legitimate divergence (a full or empty battery, an
+inverter fault, the app power limit clamping a large setpoint) is not flagged.
+
+The handoff works like this, in both directions:
+
+- **Home Assistant → device self-management:** press **Release Control**, then switch
+  'HEMS Managed' ON on the battery's Device Settings page and 'Self Consumption' ON in
+  the general home settings. Releasing alone leaves the battery idle.
+- **Device → Home Assistant:** switch 'HEMS Managed' OFF on the Device Settings page,
+  then command setpoints. With it off the battery does nothing unless commanded.
+
+Automations that hand the battery to an optimizer should gate on the External control
+blocked sensor being off.
 
 ### Power limits
 
