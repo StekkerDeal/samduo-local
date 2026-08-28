@@ -40,6 +40,12 @@ MOCK_POWER_CONFIG = {
     "control_time_left": 0,
 }
 
+
+def with_power(watts: float, **extra) -> dict:
+    """MOCK_DEVICE_DATA with a specific delivered battery power."""
+    return {**MOCK_DEVICE_DATA, "battery_power": watts, **extra}
+
+
 MOCK_USER_INPUT = {
     "host": "192.168.1.95",
     "port": 3335,
@@ -55,11 +61,14 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 
 @pytest.fixture(autouse=True)
 def fast_writes(monkeypatch):
-    """Zero the write-path delays so control tests do not sleep."""
+    """Zero the write-path delays and detector time gates so tests do not
+    depend on the wall clock; time-gating tests restore what they need."""
     from custom_components.samduo_battery.coordinator import SamduoBatteryCoordinator
 
     monkeypatch.setattr(SamduoBatteryCoordinator, "_WRITE_VERIFY_DELAY_SECONDS", 0)
     monkeypatch.setattr(SamduoBatteryCoordinator, "_WRITE_RETRY_DELAY_SECONDS", 0)
+    monkeypatch.setattr(SamduoBatteryCoordinator, "_TRACK_SETTLE_GRACE_SECONDS", 0)
+    monkeypatch.setattr(SamduoBatteryCoordinator, "_TRACK_MIN_SECONDS", 0)
 
 
 @pytest.fixture

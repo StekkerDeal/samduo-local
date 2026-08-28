@@ -71,6 +71,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
         payload["live_state"] = {
             "data": dict(coordinator.data or {}),
             "commanded_setpoint": coordinator.commanded_setpoint,
+            "control_blocked": coordinator.control_blocked,
             "max_charge_power": coordinator.max_charge_power,
             "max_discharge_power": coordinator.max_discharge_power,
             "keepalive_interval": coordinator.keepalive_interval,

@@ -57,6 +57,18 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     _WRITE_RETRY_DELAY_SECONDS: float = 1.0
     _WRITE_RETRY_OUTAGE_STREAK: int = 3
 
+    # HEMS-conflict detector: with "HEMS Managed" on, the device stores every
+    # setpoint while ignoring it - delivered power is the only signal. Honest
+    # tracking is within ~0.5 %; observed refusal diverged 500+ W.
+    _TRACK_TOLERANCE_W: int = 150
+    _TRACK_TOLERANCE_REL: float = 0.10
+    _TRACK_CLAMP_MIN_W: int = 100
+    _TRACK_MIN_POLLS: int = 3
+    _TRACK_MIN_SECONDS: float = 10.0
+    _TRACK_SETTLE_GRACE_SECONDS: float = 10.0
+    _TRACK_SOC_FULL: float = 99.0
+    _TRACK_SOC_EMPTY: float = 5.0
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -69,6 +81,7 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         max_discharge_power: int = DEFAULT_MAX_POWER,
         keepalive_interval: int = DEFAULT_KEEPALIVE_INTERVAL,
         control_timeout: int = DEFAULT_CONTROL_TIMEOUT,
+        entry_id: str | None = None,
     ) -> None:
         super().__init__(
             hass,
@@ -90,10 +103,15 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # before the entities go unavailable: one blip must not flap 15+
         # entities.
         self._failure_tolerance = 5
+        self.entry_id = entry_id
         # None = not controlling (device self-manages). An int, including 0,
         # is an actively held setpoint that the keepalive refreshes.
         self._commanded_setpoint: int | None = None
         self._last_keepalive = 0.0
+        self._track_streak = 0
+        self._track_diverging_since: float | None = None
+        self._control_blocked = False
+        self._setpoint_changed_at = 0.0
         # Rolling audit trail of control writes, surfaced in diagnostics so
         # reported misbehaviour can be correlated with the exact params sent,
         # the device's echo, and the readback verify result.
@@ -124,6 +142,11 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def write_history(self) -> list[dict[str, Any]]:
         """Recent control writes with echo and verify outcomes (newest last)."""
         return list(self._write_history)
+
+    @property
+    def control_blocked(self) -> bool:
+        """True while the device confirms setpoints but does not deliver them."""
+        return self._control_blocked
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -162,6 +185,7 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self._consecutive_failures = 0
         self._last_good_data = data
+        self._evaluate_control_tracking(data)
         return data
 
     def _handle_failed_poll(self) -> dict[str, Any]:
@@ -177,6 +201,72 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             f"Device did not answer {self._consecutive_failures} consecutive polls "
             f"(connection failures: {self.client.consecutive_failures})"
         )
+
+    # ── HEMS-conflict tracking detector ────────────────────────────────────
+
+    def _evaluate_control_tracking(self, data: dict[str, Any]) -> None:
+        """Confirm HEMS refusal from delivered power diverging from the
+        setpoint; the 22046 readback stores the refused config and sees
+        nothing. Suppressed polls hold all state, counting neither way.
+        """
+        commanded = self._commanded_setpoint
+        if commanded is None:
+            self._clear_tracking(release=True)
+            return
+        delivered = data.get("battery_power")
+        if delivered is None:
+            return
+        if time.monotonic() - self._setpoint_changed_at < self._TRACK_SETTLE_GRACE_SECONDS:
+            return
+        soc = data.get("battery_soc")
+        if commanded < 0 and soc is not None and soc >= self._TRACK_SOC_FULL:
+            return  # cannot charge a full battery
+        if commanded > 0 and soc is not None and soc <= self._TRACK_SOC_EMPTY:
+            return  # cannot discharge an empty battery
+        if data.get("inverter_state") not in (0, None):
+            return  # a faulted inverter is not a HEMS conflict
+
+        tolerance = max(self._TRACK_TOLERANCE_W, abs(commanded) * self._TRACK_TOLERANCE_REL)
+        if abs(delivered - commanded) <= tolerance:
+            self._clear_tracking()
+            return
+        if commanded != 0 and delivered * commanded > 0 and abs(delivered) >= self._TRACK_CLAMP_MIN_W:
+            # Delivery in the commanded direction: app-limit clamp, not refusal.
+            self._clear_tracking()
+            return
+
+        now = time.monotonic()
+        if self._track_diverging_since is None:
+            self._track_diverging_since = now
+        self._track_streak += 1
+        if (
+            not self._control_blocked
+            and self._track_streak >= self._TRACK_MIN_POLLS
+            and now - self._track_diverging_since >= self._TRACK_MIN_SECONDS
+        ):
+            self._set_blocked(commanded, delivered)
+
+    def _set_blocked(self, commanded: int, delivered: float) -> None:
+        self._control_blocked = True
+        _LOGGER.warning(
+            "Battery is not following the %d W setpoint (delivering %s W after %d polls) - "
+            "is 'HEMS Managed' switched on in the SAMDUO app?",
+            commanded,
+            delivered,
+            self._track_streak,
+        )
+
+    def _clear_tracking(self, *, release: bool = False) -> None:
+        """Reset the streak; log once on the blocked-to-clear transition."""
+        self._track_streak = 0
+        self._track_diverging_since = None
+        if not self._control_blocked:
+            return
+        self._control_blocked = False
+        if release:
+            _LOGGER.info("Control released while setpoints were being ignored - conflict state cleared")
+        else:
+            _LOGGER.info("Battery is following setpoints again - conflict state cleared")
 
     # ── Control writes ─────────────────────────────────────────────────────
 
@@ -212,10 +302,27 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             verify=lambda: self._verify_power_config(power),
         )
         if success:
+            self._note_setpoint_change(power)
             self._commanded_setpoint = power
             self._last_keepalive = time.monotonic()
             self.async_update_listeners()
         return success
+
+    def _note_setpoint_change(self, power: int) -> None:
+        """Restart the settle grace on a material change only: the trim loop's
+        small adjustments must not keep resetting the divergence streak."""
+        previous = self._commanded_setpoint
+        tolerance = max(self._TRACK_TOLERANCE_W, abs(power) * self._TRACK_TOLERANCE_REL)
+        material = (
+            previous is None
+            or (power > 0) != (previous > 0)
+            or (power < 0) != (previous < 0)
+            or abs(power - previous) > tolerance
+        )
+        if material:
+            self._setpoint_changed_at = time.monotonic()
+            self._track_streak = 0
+            self._track_diverging_since = None
 
     async def async_set_backup(self, enabled: bool) -> bool:
         """Enable/disable the backup (off-grid) output.
@@ -252,6 +359,7 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         if success:
             self._commanded_setpoint = None
+            self._clear_tracking(release=True)
             _LOGGER.info(
                 "Control released - battery resumes self-management in ~%d s",
                 RELEASE_TIMEOUT_S,
@@ -359,10 +467,12 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return True
 
     async def _verify_power_config(self, expected_power: int) -> dict[str, Any] | None:
-        """Re-read 22046 after a setpoint write and WARN on mismatch.
+        """Re-read 22046 after a setpoint write, recorded in the audit trail.
 
-        Best-effort and log-only: the write already succeeded; this surfaces
-        the case where the device echoed success but holds something else.
+        Debug-only: the poll-based tracking detector is the alarm. This
+        readback races fast-writing automations (a newer setpoint can land
+        before the delayed read) and the device stores even refused configs,
+        so a mismatch here is diagnostics material, not a warning.
         """
         await asyncio.sleep(self._WRITE_VERIFY_DELAY_SECONDS)
         config = await self.client.get_power_config()
@@ -371,7 +481,7 @@ class SamduoBatteryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         actual = config.get("control_power")
         match = actual == expected_power
         if not match:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Write-back verify mismatch: setpoint %d W but device reports %s W",
                 expected_power,
                 actual,
