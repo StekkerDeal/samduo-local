@@ -5,7 +5,7 @@
 #
 # 0.13.355 -> homeassistant 2026.8.1, pytest 9.0.3, pytest-asyncio 1.4.0.
 # Requires Python 3.14, which is what CI and scripts/check.ps1 run.
-pytest-homeassistant-custom-component==0.13.358
+pytest-homeassistant-custom-component==0.13.363
 
 # Pinned so a ruff release never turns an unrelated pull request red.
-ruff==0.16.5
+ruff==0.16.6
