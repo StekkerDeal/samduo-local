@@ -8,4 +8,4 @@
 pytest-homeassistant-custom-component==0.13.375
 
 # Pinned so a ruff release never turns an unrelated pull request red.
-ruff==0.17.5
+ruff==0.17.6
